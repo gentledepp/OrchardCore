@@ -35,6 +35,7 @@ namespace OrchardCore.Environment.Shell.Builders
 
         public async Task<IServiceProvider> CreateContainerAsync(ShellSettings settings, ShellBlueprint blueprint)
         {
+            var serviceProviderFactory = _serviceProvider.GetService<Func<IServiceCollection, IServiceProvider>>();
             var tenantServiceCollection = _serviceProvider.CreateChildContainer(_applicationServices);
 
             tenantServiceCollection.AddSingleton(settings);
@@ -124,6 +125,7 @@ namespace OrchardCore.Environment.Shell.Builders
                 return shellSettings.ShellConfiguration;
             });
 
+
             var moduleServiceProvider = moduleServiceCollection.BuildServiceProvider(true);
 
             // Index all service descriptors by their feature id
@@ -149,7 +151,9 @@ namespace OrchardCore.Environment.Shell.Builders
 
             await moduleServiceProvider.DisposeAsync();
 
-            var shellServiceProvider = tenantServiceCollection.BuildServiceProvider(true);
+            var shellServiceProvider = serviceProviderFactory != null
+                ? serviceProviderFactory.Invoke(tenantServiceCollection)
+                : tenantServiceCollection.BuildServiceProvider(true);
 
             // Register all DIed types in ITypeFeatureProvider
             var typeFeatureProvider = shellServiceProvider.GetRequiredService<ITypeFeatureProvider>();
