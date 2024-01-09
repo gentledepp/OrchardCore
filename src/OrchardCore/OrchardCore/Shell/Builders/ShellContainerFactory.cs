@@ -151,9 +151,11 @@ namespace OrchardCore.Environment.Shell.Builders
 
             await moduleServiceProvider.DisposeAsync();
 
-            var shellServiceProvider = serviceProviderFactory != null
-                ? serviceProviderFactory.Invoke(tenantServiceCollection)
-                : tenantServiceCollection.BuildServiceProvider(true);
+            IServiceProvider shellServiceProvider;
+            if(serviceProviderFactory != null)
+                shellServiceProvider = serviceProviderFactory.Invoke(tenantServiceCollection);
+            else
+                shellServiceProvider = tenantServiceCollection.BuildServiceProvider(true);
 
             // Register all DIed types in ITypeFeatureProvider
             var typeFeatureProvider = shellServiceProvider.GetRequiredService<ITypeFeatureProvider>();
